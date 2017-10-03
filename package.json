@@ -1,0 +1,25 @@
+{
+  "name": "routemap-express-mw",
+  "version": "0.7.0",
+  "description": "Express middleware for writing elegant apis",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/admurali/routemap-express-mw.git"
+  },
+  "keywords": [
+    "route",
+    "express",
+    "swagger"
+  ],
+  "author": "Adithya Murali <amurali@zetametrics.com>",
+  "contributors": "Adithya Murali <amurali@zetametrics.com>, Sriram Rathinavelu <srathinavelu@zetametrics.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/admurali/routemap-express-mw/issues"
+  },
+  "homepage": "https://github.com/admurali/routemap-express-mw#readme"
+}
