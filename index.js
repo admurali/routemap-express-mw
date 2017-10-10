@@ -227,7 +227,7 @@
             });
           });
         }).then(function() {
-          this_.sendResponse(response);
+          this_.sendResponse(this_, response);
         }).catch(function(error) {
           var status = error.status || 500;
           this_.status = status;
@@ -251,30 +251,37 @@
         });
       }
       else {
-        this_.sendResponse(response);
+        new Promise(function(resolve, reject) {
+          this_._recurse(response, function(error) {
+            reject(error);
+          }, function() {
+            resolve();
+          });
+        }).then(function() {
+          this_.sendResponse(this_, response);
+        });
       }
     }
 
-    sendResponse(response) {
+    sendResponse(map, response) {
       //  Get the call to run
-      var this_ = this;
-      this_.addEvent('DONE', {});
-      if (this_.paginated) {
-        this_.pageResponseObject.results = JSON.parse(JSON.stringify(this_.result));
-        this_.result = this_.pageResponseObject;
+      map.addEvent('DONE', {});
+      if (map.paginated) {
+        map.pageResponseObject.results = JSON.parse(JSON.stringify(map.result));
+        map.result = map.pageResponseObject;
       }
-      this_.status = this_.serializerStatus || this_.status || 200;
-      this_.request.logger.info(
+      map.status = map.serializerStatus || map.status || 200;
+      map.request.logger.info(
         util.format(
           "Returning successful response. Status: %d. Body: %j",
-          this_.status,
-          this_.result
+          map.status,
+          map.result
         )
       );
-      if (this_.isEmptyResponse || this_.result === undefined) {
-        response.sendStatus(this_.status);
+      if (map.isEmptyResponse || map.result === undefined) {
+        response.sendStatus(map.status);
       } else {
-        response.status(this_.status).json(this_.result);
+        response.status(map.status).json(map.result);
       }
     }
 
