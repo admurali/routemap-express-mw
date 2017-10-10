@@ -215,56 +215,67 @@
     makeResponse(response) {
       //  Get the call to run
       var this_ = this;
-      // Get a bookshelf transaction
-      this.request.bookshelf.transaction(function(t) {
-        this_.bookshelfTransaction = t;
-        return new Promise(function(resolve, reject) {
-          this_._recurse(response, function(error) {
-            reject(error);
-          }, function() {
-            resolve();
+      // Get a bookshelf transaction if exists
+      if (this.request.bookshelf) {
+        this.request.bookshelf.transaction(function(t) {
+          this_.bookshelfTransaction = t;
+          return new Promise(function(resolve, reject) {
+            this_._recurse(response, function(error) {
+              reject(error);
+            }, function() {
+              resolve();
+            });
+          });
+        }).then(function() {
+          sendResponse(response);
+        }).catch(function(error) {
+          var status = error.status || 500;
+          this_.status = status;
+          this_.error = error;
+          this_.addEvent('ERROR', {});
+          this_.request.logger.error(
+            util.format(
+              "FAILURE %j",
+              this_.dump()
+            )
+          );
+          this_.request.logger.info(
+            util.format(
+              "Returning standard response. Status: %d.",
+              this_.status
+            )
+          );
+          response.status(this_.status).json({
+            Error: error.response || 'Internal Server Error'
           });
         });
-      }).then(function() {
-        this_.addEvent('DONE', {});
-        if (this_.paginated) {
-          this_.pageResponseObject.results = JSON.parse(JSON.stringify(this_.result));
-          this_.result = this_.pageResponseObject;
-        }
-        this_.status = this_.serializerStatus || this_.status || 200;
-        this_.request.logger.info(
-          util.format(
-            "Returning successful response. Status: %d. Body: %j",
-            this_.status,
-            this_.result
-          )
-        );
-        if (this_.isEmptyResponse || this_.result === undefined) {
-          response.sendStatus(this_.status);
-        } else {
-          response.status(this_.status).json(this_.result);
-        }
-      }).catch(function(error) {
-        var status = error.status || 500;
-        this_.status = status;
-        this_.error = error;
-        this_.addEvent('ERROR', {});
-        this_.request.logger.error(
-          util.format(
-            "FAILURE %j",
-            this_.dump()
-          )
-        );
-        this_.request.logger.info(
-          util.format(
-            "Returning standard response. Status: %d.",
-            this_.status
-          )
-        );
-        response.status(this_.status).json({
-          Error: error.response || 'Internal Server Error'
-        });
-      });
+      }
+      else {
+        sendResponse(response);
+      }
+    }
+
+    sendResponse(response) {
+      //  Get the call to run
+      var this_ = this;
+      this_.addEvent('DONE', {});
+      if (this_.paginated) {
+        this_.pageResponseObject.results = JSON.parse(JSON.stringify(this_.result));
+        this_.result = this_.pageResponseObject;
+      }
+      this_.status = this_.serializerStatus || this_.status || 200;
+      this_.request.logger.info(
+        util.format(
+          "Returning successful response. Status: %d. Body: %j",
+          this_.status,
+          this_.result
+        )
+      );
+      if (this_.isEmptyResponse || this_.result === undefined) {
+        response.sendStatus(this_.status);
+      } else {
+        response.status(this_.status).json(this_.result);
+      }
     }
 
     addEvent(name, args) {
