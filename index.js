@@ -259,6 +259,26 @@
           });
         }).then(function() {
           this_.sendResponse(this_, response);
+        }).catch(function(error) {
+          var status = error.status || 500;
+          this_.status = status;
+          this_.error = error;
+          this_.addEvent('ERROR', {});
+          this_.request.logger.error(
+            util.format(
+              "FAILURE %j",
+              this_.dump()
+            )
+          );
+          this_.request.logger.info(
+            util.format(
+              "Returning standard response. Status: %d.",
+              this_.status
+            )
+          );
+          response.status(this_.status).json({
+            Error: error.response || 'Internal Server Error'
+          });
         });
       }
     }
