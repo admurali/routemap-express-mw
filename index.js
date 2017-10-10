@@ -227,7 +227,7 @@
             });
           });
         }).then(function() {
-          sendResponse(response);
+          this_.sendResponse(response);
         }).catch(function(error) {
           var status = error.status || 500;
           this_.status = status;
@@ -251,7 +251,7 @@
         });
       }
       else {
-        sendResponse(response);
+        this_.sendResponse(response);
       }
     }
 
