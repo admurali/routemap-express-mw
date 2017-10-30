@@ -36,7 +36,7 @@ npm install logging-express-mw --save
 
 
 ### Express integration
-In your server code, such as **app.js*** add the following code:
+In your server code, such as **app.js** add the following code:
 
 ```
 const app = require('express')();
@@ -51,7 +51,7 @@ app.use(routeMap());
 
 ### Controllers
 
-In your controllers, such as ***user.js*** below, implement functions using routemap.
+In your controllers, such as **user.js** below, implement functions using routemap.
 
 ```
 function getUser(req, res) {
@@ -144,7 +144,7 @@ npm install routemap-express-mw --save
 
 
 ### Express integration
-In your server code, such as **app.js*** add the following code:
+In your server code, such as **app.js** add the following code:
 
 ```
 const app = require('express')();
@@ -152,8 +152,20 @@ const logger = require('logging-express-mw');
 const bookshelf = require('bookshelf-express-mw');
 const routeMap = require('routemap-express-mw');
 
+const config = {
+  client: 'mysql',
+  connection: {
+    host : '127.0.0.1',
+    user : 'your_database_user',
+    password : 'your_database_password',
+    database : 'myapp_test'
+  },
+  pool: { min: 0, max: 7 }
+}
+
 // mw to add bookshelf to express
-app.use(bookshelf.middleware());
+app.use(bookshelf.middleware(config));
+
 // mw to add logging to express
 app.use(logger.middleware());
 // mw to write elegant apis
@@ -177,7 +189,7 @@ module.exports = () => {
 
 ### Controllers
 
-We are going to use the same ***user.js*** from the section above. We modified the ***fetchUsers*** implementation as shown below:
+We are going to use the same **user.js** from the section above. We modified the ***fetchUsers*** implementation as shown below:
 
 ```
 const User = require('../models/user');
@@ -185,7 +197,7 @@ const _ = require('lodash');
 
 const USERS_KEY = 'USERS';
 
-function fetchGlucoseActualsByPatientTag(req) {
+function fetchUsers(req) {
   return new Promise((resolve, reject) => {
     User.query((qb) => {
       qb.where({
@@ -196,6 +208,7 @@ function fetchGlucoseActualsByPatientTag(req) {
         columns: [
           'id',
           'name',
+          'is_deleted',
         ],
       }, req.routeMap.pageObject),
     ).then((users) => {
@@ -217,9 +230,35 @@ function fetchGlucoseActualsByPatientTag(req) {
 We used the following routemap properties:
 * pageObject - for GET requests you can query by either
   * limit and offset
+
+     --OR--
+
   * page and pageSize
 * setPageResponseObject - set the bookshelf object using pagination
 
+We can then make a ***serializeUsers*** function as shown below:
+
+```
+function serializeUsers(req) {
+  return new Promise((resolve, reject) => {
+    try {
+      const users = req.routeMap.getObject(
+        USERS_KEY,
+      );
+      resolve(users.map(
+        (user) => {
+          const result = _.pick(user, [
+            'id',
+            'name',
+          ]);
+          return result;
+        }));
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+```
 
 ## Error Handling and Permissions (Advanced)
 
