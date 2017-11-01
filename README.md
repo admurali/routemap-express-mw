@@ -6,14 +6,15 @@ Express middleware for writing elegant apis.
 
 ## Motivation
 
-We wanted to create a middleware that we can reuse across our projects to streamline and speed up development using NodeJS and express framework.
-Routemap will also us to create modular functions that we can reuse across controllers.
+Routemap provides ready made utilities for designing your REST APIs. Routemap is a reusable middleware to streamline and accelerate development using Node.js and express framework.
+
+Here you can create modular functions that can be reused across controllers.
 
 ## Description
 
-Routemap at core is used to maintain a stack of promises that will eventually chain towards a meaningful response for the user. Routemap's callstack can be used to dynamically add promise chains during execution.
+Routemap is used to maintain a stack of promises that will eventually chain towards a standard http status response. Routemap's callstack can be used to dynamically add promise chains during execution.
 
-Routemap's logging mechanism will ensure all method names are logged into the console with result. Routemap's promises, when implemented correctly, end with a resolve or reject. On a rejection due to error, all query and body parameters along with the method name, line and error message are logged to the console and other transports you have specified using `logging-express-mw`.
+Routemap's logging mechanism will record all method names providing built-in traceability. Routemap's promises result in a resolve or reject. On a rejection due to error, all query and body parameters, error messages, and method names are logged using transports you have specified in `logging-express-mw`.
 
 Please configure and setup `logging-express-mw` using https://github.com/admurali/logging-express-mw
 
@@ -54,6 +55,7 @@ app.use(routeMap());
 In your controllers, such as **user.js** below, implement functions using routemap.
 
 ```
+// example user.js controller
 function getUser(req, res) {
   req.routeMap.push(serializeUsers);
   req.routeMap.push(fetchUsers);
@@ -88,19 +90,18 @@ module.exports = {
 
 ### Making a response
 
-First thing is to create a response, using ***req.routeMap.makeResponse(res);***
+For routemap to function, we first need to create a response, using ***req.routeMap.makeResponse(res);***
 
-We made the following REST functions:
-* getUser - GET endpoint
-* putUser - PUT endpoint
-* postUser - POST endpoint
-* deleteUser - DELETE endpoint
+In the example above, we had the following REST endpoints:
+* getUser - GET
+* putUser - PUT
+* postUser - POST
+* deleteUser - DELETE
 
 ### Data Handling
 
-Frequently, there will be a need when you will need to pass data from one routemap function to another.
-
-We want to pass some data from ***fetchUsers*** to any other function down the promise chain. To do this, we can leverage a dictionary that routeMap comes with.
+Frequently, you will need to pass data from one routemap function to another.
+For example, we want to pass data from ***fetchUsers*** to any other function down the promise chain. To do this, we can leverage a built-in dictionary from routemap.
 
 ```
 const USERS_KEY = 'USER';
@@ -121,13 +122,13 @@ function fetchUsers(req) {
 }
 ```
 
-In the function above we used ***req.routeMap.addOrUpdateObject(key, object)*** to add objects to dictionary.
+In the function above, we used ***req.routeMap.addOrUpdateObject(key, object)*** to add objects to the dictionary.
 
-We can retrieve and utilize the object further using ***req.routeMap.getObject(key)***
+We can retrieve and utilize the object downstream using ***req.routeMap.getObject(key)***.
 
 ## Pagination (Advanced)
 
-If querying lots of data, we might want to paginate. We will go over how we implement such a solution with ease using routemap for relational databases.
+When querying large amounts of data, we might want to implement pagination in our response. We will showcase pagination with an example solution using routemap for relational databases.
 
 ### Installation
 
@@ -173,7 +174,7 @@ app.use(routeMap());
 ```
 ### Models
 
-We have a *user* table in our relational database and we made a corresponding bookshelf model.
+We have a *user* table in our relational database and made a corresponding bookshelf model.
 
 ```
 // user.js in models folder
@@ -189,7 +190,7 @@ module.exports = () => {
 
 ### Controllers
 
-We are going to use the same **user.js** from the section above. We modified the ***fetchUsers*** implementation as shown below:
+We are going to use the same **user.js** controller from the **Basic Overview** section above. We modified the ***fetchUsers*** implementation as shown below:
 
 ```
 const User = require('../models/user');
@@ -228,13 +229,13 @@ function fetchUsers(req) {
 ```
 
 We used the following routemap properties:
-* pageObject - for GET requests you can query by either
+* pageObject - for GET requests query by either
   * limit and offset
 
      --OR--
 
   * page and pageSize
-* setPageResponseObject - set the bookshelf object using pagination
+* setPageResponseObject - sets the bookshelf object using pagination
 
 We can then make a ***serializeUsers*** function as shown below:
 
@@ -262,21 +263,19 @@ function serializeUsers(req) {
 
 ## Error Handling and Permissions (Advanced)
 
-As per (https://developer.mozilla.org/) Promise can be either:
-
+Promise can result in three states:
 * pending: initial state, neither fulfilled nor rejected
-* fulfilled: meaning that the operation completed successfully
-* rejected: meaning that the operation failed
+* fulfilled: the operation completed successfully
+* rejected: the operation failed
 
-Usually we call ***reject(err)*** which throws an *Internal Server Error* message to the user with a status code *500* and logs the complete error message using the transports provided to *logging-express-mw*.
+Usually, we call ***reject(err)*** which throws an *Internal Server Error* message to the user with a status code *500* and logs the complete error message using the transports provided to *logging-express-mw*.
 
-But we have other types error codes that we may want to show the user.
-
+We could have other types of error codes that we may want to show the user.
 Routemap allows us to reuse common error codes and response messages throughout our code with minimal effort.
 
 ### Standard Errors
 
-Out of the box routemap comes with the following error classes, which you can use throughout your project.
+Out of the box, routemap comes with the following error classes which you can use throughout your project.
 
 Standard:
 * NotFoundError - Status code *404* Message *Not Found*
@@ -288,11 +287,11 @@ To throw one of these errors in your code, just add the following ***reject(req.
 
 ### Customize Errors
 
-You can always make your own error functions and store them and pass it to the reject function.
+You can always make your own error functions to store and pass to the reject function.
 
-In our example, we might add users using unqiue *email* and thus may throw frequently a *EmailAlreadyTakenError* error in various functions in our code.
+In our example, we might add users using unique *email* address and thus, may throw an *EmailAlreadyTakenError* error in various functions in our code.
 
-We can make a custom error class such as below:
+We can make a custom error class as described below:
 
 ```
 class EmailAlreadyTakenError extends Error {
@@ -304,29 +303,40 @@ class EmailAlreadyTakenError extends Error {
 }
 ```
 
-We can then make and pass this object our reject function ***reject(EmailAlreadyTakenError());***
+We can then make and pass this object to our reject function ***reject(EmailAlreadyTakenError());***
 
-This will send a status code of *500* and response *Email Already Taken*
+This will send a status code of *500* and a response *Email Already Taken*
 
 ### Standard Permissions
 
-Out of the box routemap comes with the following permission class, which you can use throughout your project.
+Built-in, routemap comes with the following permission class which you can use throughout your project.
 
 Standard:
 * AuthenticatedPermission - checks if **req.user*** is not null.
-  * If null it throws standard *UnauthorizedError*
+  * If null, it throws standard *UnauthorizedError*
 
-To utilize this permission in your code, use the *** ***reject(req.routemap.NotFoundError());***
+For example, we can use the ***AuthenticatedPermission*** to ensure only authenticated users can access our ***getUser*** function.
+
+```
+function getUser(req, res) {
+  req.routeMap.push(serializeUsers);
+  req.routeMap.push(fetchUsers);
+    req.routeMap.setPermission(
+        req.routeMap.AuthenticatedPermission()
+    );
+    req.routeMap.makeResponse(res);
+}
+```
 
 ### Customize Permissions
 
 You can make your own custom permissions and utilize them throughout your application using routemap. Your custom permission object needs to have a ***hasPermission*** function that returns a promise.
 
-Continuing with our users example, lets say we have users with multiple roles in our system. We want to give only users with role of *admin* to access certain apis.
+Continuing with our users example, let's say we have users with multiple roles in our system. We want to give only users with role of *admin* to access certain APIs.
 
-We made permission classes in application:
+Below, we made permission classes in the application:
 * BasePermission - We extend and reuse as we add additional permission classes
-* RolesBasedPermission - Will check if user role matches the needed permission
+* RolesBasedPermission - Will check if user role matches the needed permissions
 
 ```
 class BasePermission {
@@ -391,6 +401,6 @@ function getUser(req, res) {
 
 Before ***makeResponse(res)*** we call routemap's ***setPermission*** function with our custom permissions object.
 
-Routemap before executing ***fetchUsers*** will call the ***hasPermission*** function in our *RolesBasedPermission* object.
+Before executing ***fetchUsers***, routemap will call the ***hasPermission*** function in our *RolesBasedPermission* object.
 
-If user role type does not have enough privileges, we throw routemap's ***req.routeMap.ForbiddenError***. We pass in a message, that gets logged using transports provided to ***logging-express-mw*** but routemap will return status code *403* and message as *Forbidden* to user.
+If user role type does not have enough privileges, we throw routemap's ***req.routeMap.ForbiddenError*** error. We pass in a message that gets logged using transports provided to ***logging-express-mw***, but routemap will return the status code *403* resulting in a *Forbidden* error message to the end user.
