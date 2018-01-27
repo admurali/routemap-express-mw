@@ -1,6 +1,6 @@
 {
   "name": "routemap-express-mw",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "Express middleware for writing elegant apis",
   "main": "index.js",
   "scripts": {
