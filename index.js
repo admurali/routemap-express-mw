@@ -9,6 +9,22 @@
 
   var util = require('util');
 
+  class GenericError extends Error {
+    constructor(status, message) {
+      super(message);
+      this.status = status;
+      this.response = message;
+    }
+  }
+
+  class BadRequestError extends Error {
+    constructor(message) {
+      super(message);
+      this.status = 400;
+      this.response = message;
+    }
+  }
+
   class ForbiddenError extends Error {
     constructor(message) {
       super(message);
@@ -22,14 +38,6 @@
       super(message);
       this.status = 401;
       this.response = 'Unauthorized';
-    }
-  }
-
-  class BadRequestError extends Error {
-    constructor(message) {
-      super(message);
-      this.status = 400;
-      this.response = message;
     }
   }
 
@@ -148,6 +156,10 @@
         return true;
       } else
         return false;
+    }
+
+    GenericError(status, message) {
+      return new GenericError(status, message);
     }
 
     ForbiddenError(message) {
