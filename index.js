@@ -158,6 +158,10 @@
         return false;
     }
 
+    GenericError(message) {
+      return new GenericError(message);
+    }
+
     ForbiddenError(message) {
       return new ForbiddenError(message);
     }
